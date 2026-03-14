@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FAFAF8;
+  --bg-secondary: #F0EDE6;
+  --bg-dark: #1A1A2E;
+  --text-primary: #1A1A2E;
+  --text-secondary: #5C5C6F;
+  --accent-green: #2D6A4F;
+  --accent-green-light: #40916C;
+  --accent-amber: #E76F51;
+  --accent-blue: #264653;
+  --accent-gold: #E9C46A;
+  --positive: #2D6A4F;
+  --negative: #E76F51;
+  --neutral: #E9C46A;
+  --border: #D4D0C8;
+}
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'DM Serif Display', serif;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 3px;
+  }
+}
