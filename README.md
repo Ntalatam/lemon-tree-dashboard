@@ -1,6 +1,6 @@
 # LemonTree Insights
 
-A data visualization and reporting dashboard that transforms NYC food access data into clear, actionable insights. Built for the **Morgan Stanley Code to Give Hackathon 2026 (Track B)** in partnership with [Lemontree](https://projecthospitality.org/).
+A data visualization and reporting dashboard that transforms NYC food access data into clear, actionable insights. Built for the **Morgan Stanley Code to Give Hackathon 2026 (Track B)** in partnership with [Lemontree](https://www.foodhelpline.org/).
 
 ---
 
