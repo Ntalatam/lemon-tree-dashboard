@@ -30,7 +30,7 @@ export default function Dashboard() {
     <div>
       <PageHeader title="Dashboard" subtitle="NYC food access overview with live data from NYC Open Data" />
 
-      {loading ? <LoadingSpinner /> : (
+      {loading ? <LoadingSpinner variant="skeleton" /> : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <KPICard icon={MapPin} label="Neighborhoods Tracked" value={totalNeighborhoods} color="blue" />

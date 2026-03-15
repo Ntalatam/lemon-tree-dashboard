@@ -1,9 +1,22 @@
 import hashlib
+import re
 import time
+from typing import Any
+
 import httpx
 
-_cache: dict[str, tuple[float, any]] = {}
+_cache: dict[str, tuple[float, Any]] = {}
 CACHE_TTL = 3600  # 1 hour
+
+# Reuse a single AsyncClient across requests for connection pooling
+_client: httpx.AsyncClient | None = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(timeout=30.0)
+    return _client
 
 NYC_SUPPLY_GAP_URL = "https://data.cityofnewyork.us/resource/4kc9-zrs2.json"
 NYC_CFC_URL = "https://data.cityofnewyork.us/resource/mpqk-skis.json"
@@ -52,12 +65,12 @@ async def fetch_json(url: str, params: dict | None = None) -> list | dict:
     if cached is not None:
         return cached
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-            _set_cached(key, data)
-            return data
+        client = _get_client()
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        _set_cached(key, data)
+        return data
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return []
@@ -68,12 +81,24 @@ def nta_to_borough(nta_code: str) -> str:
     return NTA_TO_BOROUGH.get(prefix, "Unknown")
 
 
+def _sanitize_soql(value: str) -> str:
+    """Strip anything that isn't alphanumeric, space, or hyphen to prevent SoQL injection."""
+    return re.sub(r"[^a-zA-Z0-9 \-]", "", value)
+
+
+VALID_YEARS = {"2022", "2023", "2024", "2025"}
+VALID_BOROUGH_PREFIXES = {"MN", "BX", "BK", "QN", "SI"}
+
+
 async def get_supply_gap(year: str = "2025", borough: str | None = None, limit: int = 200) -> list[dict]:
-    params = {"$limit": str(limit), "$order": "weighted_score DESC"}
-    where_clauses = [f"year='{year}'"]
-    if borough:
+    params = {"$limit": str(min(limit, 1000)), "$order": "weighted_score DESC"}
+    where_clauses = []
+    if year and year in VALID_YEARS:
+        where_clauses.append(f"year='{year}'")
+    if borough and borough in VALID_BOROUGH_PREFIXES:
         where_clauses.append(f"starts_with(nta, '{borough}')")
-    params["$where"] = " AND ".join(where_clauses)
+    if where_clauses:
+        params["$where"] = " AND ".join(where_clauses)
     records = await fetch_json(NYC_SUPPLY_GAP_URL, params)
     for r in records:
         r["borough"] = nta_to_borough(r.get("nta", ""))
@@ -152,7 +177,7 @@ async def get_usage_data() -> dict:
     return {"pantry_individuals": pantry, "soup_kitchen_meals": soup}
 
 
-async def get_locations(loc_type: str = "all", borough: str | None = None, ebt_only: bool = False) -> list[dict]:
+async def get_locations(loc_type: str = "all", borough: str | None = None, ebt_only: bool = False, year: str = "2025") -> list[dict]:
     locations = []
     if loc_type in ("snap", "all"):
         snap_records = await fetch_json(NYC_SNAP_URL)
@@ -177,7 +202,8 @@ async def get_locations(loc_type: str = "all", borough: str | None = None, ebt_o
                 "extra": {"phone": r.get("phone_number_s_", ""), "nta": r.get("nta", "")},
             })
     if loc_type in ("farmers_market", "all"):
-        params = {"$where": "year='2025'", "$limit": "2500"}
+        fm_year = year if year in VALID_YEARS else "2025"
+        params = {"$where": f"year='{fm_year}'", "$limit": "2500"}
         fm_records = await fetch_json(NYC_FARMERS_URL, params)
         for r in fm_records:
             b = r.get("borough", "")

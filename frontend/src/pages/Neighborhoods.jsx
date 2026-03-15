@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import PageHeader from '../components/layout/PageHeader'
 import FilterBar from '../components/shared/FilterBar'
 import LoadingSpinner from '../components/shared/LoadingSpinner'
@@ -13,21 +13,23 @@ export default function Neighborhoods() {
   const [expanded, setExpanded] = useState(null)
 
   const boroughPrefix = filters.borough ? BOROUGH_NTA_PREFIX[filters.borough] : undefined
-  const { data: supplyData, loading } = useApi('/api/supply-gap', {
+  const apiParams = useMemo(() => ({
     year: '2025',
     borough: boroughPrefix || '',
     limit: 200,
-  })
+  }), [boroughPrefix])
+  const { data: supplyData, loading } = useApi('/api/supply-gap', apiParams)
 
-  // Fetch all years for trend display
-  const { data: allYearsData } = useApi('/api/supply-gap', { year: '', limit: 1000 })
+  // Fetch all years for trend display (stable params object)
+  const allYearsParams = useMemo(() => ({ year: '', limit: 1000 }), [])
+  const { data: allYearsData } = useApi('/api/supply-gap', allYearsParams)
 
   const records = supplyData?.data || []
-  const sorted = [...records].sort((a, b) => {
+  const sorted = useMemo(() => [...records].sort((a, b) => {
     if (filters.sort === 'supply_gap_lbs') return (b.supply_gap_lbs || 0) - (a.supply_gap_lbs || 0)
     if (filters.sort === 'food_insecure_percentage') return (b.food_insecure_percentage || 0) - (a.food_insecure_percentage || 0)
     return (b.weighted_score || 0) - (a.weighted_score || 0)
-  })
+  }), [records, filters.sort])
 
   const filterConfig = [
     {
@@ -69,7 +71,8 @@ export default function Neighborhoods() {
 
       {loading ? <LoadingSpinner /> : (
         <div className="space-y-2">
-          <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-lt-text-secondary uppercase tracking-wide">
+          {/* Desktop header */}
+          <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-lt-text-secondary uppercase tracking-wide">
             <div className="col-span-1">Rank</div>
             <div className="col-span-3">Neighborhood</div>
             <div className="col-span-2">Borough</div>
@@ -80,9 +83,10 @@ export default function Neighborhoods() {
 
           {sorted.map((r, i) => (
             <div key={r.nta || i}>
+              {/* Desktop row */}
               <button
                 onClick={() => setExpanded(expanded === r.nta ? null : r.nta)}
-                className="w-full grid grid-cols-12 gap-2 px-4 py-3 text-sm bg-lt-bg-secondary rounded-lg border border-lt-border/50 hover:border-lt-green/30 transition-colors text-left"
+                className="w-full hidden md:grid grid-cols-12 gap-2 px-4 py-3 text-sm bg-lt-bg-secondary rounded-lg border border-lt-border/50 hover:border-lt-green/30 transition-colors text-left"
               >
                 <div className="col-span-1 font-mono text-lt-text-secondary">{r.rank || i + 1}</div>
                 <div className="col-span-3 font-medium truncate">{r.nta_name}</div>
@@ -90,6 +94,25 @@ export default function Neighborhoods() {
                 <div className="col-span-2 font-mono text-lt-amber">{formatLbs(r.supply_gap_lbs)}</div>
                 <div className="col-span-2 font-mono">{((r.food_insecure_percentage || 0) * 100).toFixed(1)}%</div>
                 <div className="col-span-2 font-mono text-lt-green">{(r.weighted_score || 0).toFixed(1)}</div>
+              </button>
+
+              {/* Mobile card */}
+              <button
+                onClick={() => setExpanded(expanded === r.nta ? null : r.nta)}
+                className="w-full md:hidden bg-lt-bg-secondary rounded-lg border border-lt-border/50 hover:border-lt-green/30 transition-colors text-left p-4"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <span className="font-mono text-xs text-lt-text-secondary mr-2">#{r.rank || i + 1}</span>
+                    <span className="font-medium text-sm">{r.nta_name}</span>
+                  </div>
+                  <span className="text-xs text-lt-text-secondary bg-white px-2 py-0.5 rounded">{r.borough}</span>
+                </div>
+                <div className="flex gap-4 text-xs">
+                  <span className="font-mono text-lt-amber">Gap: {formatLbs(r.supply_gap_lbs)}</span>
+                  <span className="font-mono">Insec: {((r.food_insecure_percentage || 0) * 100).toFixed(1)}%</span>
+                  <span className="font-mono text-lt-green">Score: {(r.weighted_score || 0).toFixed(1)}</span>
+                </div>
               </button>
 
               {expanded === r.nta && (
