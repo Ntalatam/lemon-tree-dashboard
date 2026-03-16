@@ -55,7 +55,7 @@ function useAnimatedValue(target) {
   return display
 }
 
-export default function KPICard({ icon: Icon, label, value, sublabel, color = 'green' }) {
+export default function KPICard({ icon: Icon, label, value, sublabel, color = 'green', trend }) {
   const colorMap = {
     green: 'text-lt-green',
     amber: 'text-lt-amber',
@@ -65,13 +65,29 @@ export default function KPICard({ icon: Icon, label, value, sublabel, color = 'g
 
   const animated = useAnimatedValue(value)
 
+  // trend: { value: "2.3%", direction: "up" | "down", inverse?: boolean }
+  // inverse=true means "up is bad" (e.g. food insecurity going up)
+  const trendColor = trend
+    ? (trend.direction === 'up')
+      ? (trend.inverse ? 'text-lt-amber' : 'text-lt-green')
+      : (trend.inverse ? 'text-lt-green' : 'text-lt-amber')
+    : ''
+
   return (
     <div className="bg-lt-bg-secondary rounded-lg p-5 border border-lt-border/50 hover:border-lt-green/30 transition-all duration-200">
       <div className="flex items-center gap-3 mb-3">
         {Icon && <Icon size={20} className={clsx(colorMap[color] || colorMap.green)} />}
         <span className="text-sm text-lt-text-secondary">{label}</span>
       </div>
-      <p className={clsx('text-2xl font-mono font-medium tabular-nums', colorMap[color] || colorMap.green)}>{animated}</p>
+      <div className="flex items-end gap-2">
+        <p className={clsx('text-2xl font-mono font-medium tabular-nums', colorMap[color] || colorMap.green)}>{animated}</p>
+        {trend && (
+          <span className={clsx('flex items-center gap-0.5 text-xs font-medium mb-1', trendColor)}>
+            <span>{trend.direction === 'up' ? '\u2191' : '\u2193'}</span>
+            {trend.value}
+          </span>
+        )}
+      </div>
       {sublabel && <p className="text-xs text-lt-text-secondary mt-1">{sublabel}</p>}
     </div>
   )

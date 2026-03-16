@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Download } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
 import FilterBar from '../components/shared/FilterBar'
 import LoadingSpinner from '../components/shared/LoadingSpinner'
@@ -61,7 +62,16 @@ export default function Neighborhoods() {
 
   return (
     <div>
-      <PageHeader title="Neighborhoods" subtitle="Explore food access data across 197 NYC neighborhoods" />
+      <div className="flex items-start justify-between mb-8">
+        <PageHeader title="Neighborhoods" subtitle="Explore food access data across 197 NYC neighborhoods" />
+        <a
+          href="/api/export/supply-gap"
+          className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs bg-lt-bg-secondary border border-lt-border rounded-md hover:border-lt-green/30 transition-colors text-lt-text-secondary hover:text-lt-text"
+        >
+          <Download size={14} />
+          Export CSV
+        </a>
+      </div>
 
       <FilterBar
         filters={filterConfig}

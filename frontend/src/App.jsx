@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Neighborhoods from './pages/Neighborhoods'
 import Feedback from './pages/Feedback'
 import Reports from './pages/Reports'
+import BoroughComparison from './pages/BoroughComparison'
 import About from './pages/About'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/neighborhoods" element={<Neighborhoods />} />
+              <Route path="/boroughs" element={<BoroughComparison />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/about" element={<About />} />

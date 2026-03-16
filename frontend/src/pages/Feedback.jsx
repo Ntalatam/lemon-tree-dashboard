@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { Download } from 'lucide-react'
 import PageHeader from '../components/layout/PageHeader'
 import FeedbackForm from '../components/feedback/FeedbackForm'
 import FeedbackFeed from '../components/feedback/FeedbackFeed'
@@ -22,7 +23,16 @@ export default function Feedback() {
 
   return (
     <div>
-      <PageHeader title="Feedback" subtitle="Community feedback on food pantry services with NLP-powered categorization" />
+      <div className="flex items-start justify-between mb-8">
+        <PageHeader title="Feedback" subtitle="Community feedback on food pantry services with NLP-powered categorization" />
+        <a
+          href="/api/export/feedback"
+          className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs bg-lt-bg-secondary border border-lt-border rounded-md hover:border-lt-green/30 transition-colors text-lt-text-secondary hover:text-lt-text"
+        >
+          <Download size={14} />
+          Export CSV
+        </a>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-1">
